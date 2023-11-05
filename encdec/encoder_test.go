@@ -10,6 +10,8 @@ import (
 	"gotest.tools/assert"
 )
 
+/////////////////////////////////////////////
+// Encode tests
 func TestEncodeStartRequest(t *testing.T) {
 
 	expect := "000a0001000004d10000000a"
@@ -232,6 +234,8 @@ func TestEncodeGetInfoRequest(t *testing.T) {
 	assert.Equal(t, expect, hex.EncodeToString(bytes), "\nThe two array should be the same.")
 }
 
+/////////////////////////////////////////////
+// Decode tests
 func TestDecodeStartResponse(t *testing.T) {
 	str := "00110001000004d16c6f63616c3a3539303031"
 	expect := &Message{
@@ -239,14 +243,13 @@ func TestDecodeStartResponse(t *testing.T) {
 			Length:  uint16(17),
 			Command: ZMQ_CMD_START,
 		},
-		StartResponse: MsgStartResponse {
-			FlowId: uint32(1233),
+		StartResponse: MsgStartResponse{
+			FlowId:    uint32(1233),
 			Publicher: "local:59001",
-
 		},
 	}
 
-	v := [] byte ("local:59001")
+	v := []byte("local:59001")
 	fmt.Printf("publisher %s\n", hex.EncodeToString(v))
 
 	encoder := &Encoder{}
@@ -257,6 +260,32 @@ func TestDecodeStartResponse(t *testing.T) {
 	}
 	assert.Equal(t, expect.Header, msg.Header, "\nThe two ZMQ message header should be the same.")
 	assert.Equal(t, expect.StartResponse, msg.StartResponse, "\nThe two ZMQ message header should be the same.")
+}
+
+func TestDecodeGetInfoResponse(t *testing.T) {
+	str := "00110007000004d1646678702076312e31"
+	expect := &Message{
+		Header: MsgHeader{
+			Length:  uint16(17),
+			Command: ZMQ_CMD_GET_INFO,
+		},
+		GetInfoResponse: MsgGetInfoResponse{
+			FlowId:  uint32(1233),
+			Version: "dfxp v1.1",
+		},
+	}
+
+	v := []byte("dfxp v1.1")
+	fmt.Printf("version %s\n", hex.EncodeToString(v))
+
+	encoder := &Encoder{}
+	bytes, _ := hex.DecodeString(str)
+	msg, err := encoder.Decode(bytes)
+	if err != nil {
+		t.Fatalf("Encode failed. Err:%v", err)
+	}
+	assert.Equal(t, expect.Header, msg.Header, "\nThe two ZMQ message header should be the same.")
+	assert.Equal(t, expect.GetInfoResponse, msg.GetInfoResponse, "\nThe two ZMQ message header should be the same.")
 }
 
 func TestDecodeStopResponse(t *testing.T) {
@@ -281,8 +310,7 @@ func TestDecodeStopResponse(t *testing.T) {
 	assert.Equal(t, expect.Response, msg.Response, "\nThe two ZMQ message header should be the same.")
 }
 
-
-func TestDecodeDeleteTEIDsResponse(t *testing.T) {
+func TestDecodeDeleteTunnelsResponse(t *testing.T) {
 	str := "000a0005000004d100000006"
 	expect := &Message{
 		Header: MsgHeader{
@@ -304,3 +332,50 @@ func TestDecodeDeleteTEIDsResponse(t *testing.T) {
 	assert.Equal(t, expect.Header, msg.Header, "\nThe two ZMQ message header should be the same.")
 	assert.Equal(t, expect.TunnelResponse, msg.TunnelResponse, "\nThe two ZMQ message header should be the same.")
 }
+
+func TestDecodeDeleteAllTunnelsResponse(t *testing.T) {
+	str := "000a0006000004d100000006"
+	expect := &Message{
+		Header: MsgHeader{
+			Length:  uint16(10),
+			Command: ZMQ_CMD_DEL_ALL_TUNNELS,
+		},
+		TunnelResponse: MsgTunnelResponse{
+			FlowId:  uint32(1233),
+			Tunnels: uint32(6),
+		},
+	}
+
+	encoder := &Encoder{}
+	bytes, _ := hex.DecodeString(str)
+	msg, err := encoder.Decode(bytes)
+	if err != nil {
+		t.Fatalf("Encode failed. Err:%v", err)
+	}
+	assert.Equal(t, expect.Header, msg.Header, "\nThe two ZMQ message header should be the same.")
+	assert.Equal(t, expect.TunnelResponse, msg.TunnelResponse, "\nThe two ZMQ message header should be the same.")
+}
+
+func TestDecodeAddTunnelssResponse(t *testing.T) {
+	str := "000a0004000004d100000006"
+	expect := &Message{
+		Header: MsgHeader{
+			Length:  uint16(10),
+			Command: ZMQ_CMD_ADD_TUNNELS,
+		},
+		TunnelResponse: MsgTunnelResponse{
+			FlowId:  uint32(1233),
+			Tunnels: uint32(6),
+		},
+	}
+
+	encoder := &Encoder{}
+	bytes, _ := hex.DecodeString(str)
+	msg, err := encoder.Decode(bytes)
+	if err != nil {
+		t.Fatalf("Encode failed. Err:%v", err)
+	}
+	assert.Equal(t, expect.Header, msg.Header, "\nThe two ZMQ message header should be the same.")
+	assert.Equal(t, expect.TunnelResponse, msg.TunnelResponse, "\nThe two ZMQ message header should be the same.")
+}
+

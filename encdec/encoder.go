@@ -142,12 +142,9 @@ func (enc *Encoder) decodeStartResponse(buffer *bytes.Buffer, msg *Message) erro
 	binary.Read(buffer, binary.BigEndian, &msg.StartResponse.FlowId)
 	//read publisher
 	bytes := buffer.Bytes()
-	fmt.Printf("bytes:%s", hex.EncodeToString(bytes))
+	glog.Infof("bytes:%s", hex.EncodeToString(bytes))
 	msg.StartResponse.Publicher = string(bytes)
-	
-
 	return nil
-
 }
 
 func (enc *Encoder) decodeStopResponse(buffer *bytes.Buffer, msg *Message) error {
@@ -155,20 +152,28 @@ func (enc *Encoder) decodeStopResponse(buffer *bytes.Buffer, msg *Message) error
 	return nil
 }
 func (enc *Encoder) decodeAddTunnelResponse(buffer *bytes.Buffer, msg *Message) error {
+	binary.Read(buffer, binary.BigEndian, &msg.TunnelResponse.FlowId)
+	binary.Read(buffer, binary.BigEndian, &msg.TunnelResponse.Tunnels)
 	return nil
 }
 func (enc *Encoder) decodeDelTunnelResponse(buffer *bytes.Buffer, msg *Message) error {
 	binary.Read(buffer, binary.BigEndian, &msg.TunnelResponse.FlowId)
 	binary.Read(buffer, binary.BigEndian, &msg.TunnelResponse.Tunnels)
-
 	return nil
 }
 
 func (enc *Encoder) decodeDelAllTEIDsResponse(buffer *bytes.Buffer, msg *Message) error {
+	binary.Read(buffer, binary.BigEndian, &msg.TunnelResponse.FlowId)
+	binary.Read(buffer, binary.BigEndian, &msg.TunnelResponse.Tunnels)
 	return nil
 
 }
 func (enc *Encoder) decodeGetInfoResponse(buffer *bytes.Buffer, msg *Message) error {
+	binary.Read(buffer, binary.BigEndian, &msg.GetInfoResponse.FlowId)
+	//read Version
+	bytes := buffer.Bytes()
+	glog.Infof("bytes:%s", hex.EncodeToString(bytes))
+	msg.GetInfoResponse.Version = string(bytes)
 	return nil
 
 }
