@@ -140,9 +140,7 @@ func (enc *Encoder) Decode(bytesArray []byte) (*Message, error) {
 
 func (enc *Encoder) decodeStartResponse(buffer *bytes.Buffer, msg *Message) error {
 	binary.Read(buffer, binary.BigEndian, &msg.StartResponse.FlowId)
-	//reade version info
-	msgL := msg.Header.Length
-	fmt.Printf("msgL:%v\n",msgL)
+	//read publisher
 	bytes := buffer.Bytes()
 	fmt.Printf("bytes:%s", hex.EncodeToString(bytes))
 	msg.StartResponse.Publicher = string(bytes)

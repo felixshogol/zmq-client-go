@@ -233,21 +233,21 @@ func TestEncodeGetInfoRequest(t *testing.T) {
 }
 
 func TestDecodeStartResponse(t *testing.T) {
-	str := "00060001000004d1646678702076312e31"
+	str := "00110001000004d16c6f63616c3a3539303031"
 	expect := &Message{
 		Header: MsgHeader{
-			Length:  uint16(6),
+			Length:  uint16(17),
 			Command: ZMQ_CMD_START,
 		},
 		StartResponse: MsgStartResponse {
 			FlowId: uint32(1233),
-			Publicher: "dfxp v1.1",
+			Publicher: "local:59001",
 
 		},
 	}
 
-	v := [] byte ("dfxp v1.1")
-	fmt.Printf("version %s\n", hex.EncodeToString(v))
+	v := [] byte ("local:59001")
+	fmt.Printf("publisher %s\n", hex.EncodeToString(v))
 
 	encoder := &Encoder{}
 	bytes, _ := hex.DecodeString(str)
