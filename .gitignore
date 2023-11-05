@@ -1,0 +1,13 @@
+.idea
+._.*
+._*
+*.DS_Store
+bin/
+.run/
+*.pb.go
+*.log
+.vscode
+*.db    
+gen/*
+*.a
+*.pcapng
