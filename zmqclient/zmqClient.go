@@ -10,7 +10,7 @@ import (
 	"github.com/golang/glog"
 )
 
-type ZmqPacketHandler func(msg * zmq4.Msg)
+type ZmqPacketHandler func(msg *zmq4.Msg)
 
 type ZmqClientOptions struct {
 	Host string
@@ -47,7 +47,6 @@ func (client *ZmqClient) Connect() error {
 	socket := zmq.NewReq(ctx, zmq.WithDialerRetry(time.Second))
 
 	// todo after connect send info command to get dfxp version & information
-
 	glog.Infof("connecting perf zmq %s:%d", client.options.Host, client.options.Port)
 	if err := socket.Dial(fmt.Sprintf("tcp://%s:%d", client.options.Host, client.options.Port)); err != nil {
 		return err
@@ -60,6 +59,37 @@ func (client *ZmqClient) Connect() error {
 
 func (client *ZmqClient) isConnected() bool {
 	return client.connected
+}
+
+//Send - send packet to server
+func (client *ZmqClient) Send(packet []byte) error {
+	msg := zmq4.NewMsg(packet)
+	if err := client.socket.Send(msg); err != nil {
+		return fmt.Errorf("sending: %w", err)
+	}
+	return nil
+}
+
+func (client *ZmqClient) SendAndReceiveWithTimeout(packet []byte, to int) ([]byte, int, error) {
+	if err := client.Send(packet); err != nil {
+		return nil, 0, err
+	}
+	return client.ReceiveWithTimeout(to)
+}
+
+
+func (client *ZmqClient) ReceiveWithTimeout(to int) ([]byte, int, error) {
+	select {
+	case <-time.After(time.Duration(to) * time.Second):
+		return nil, -1, nil
+	default:
+		// Wait for reply.
+		r, err := client.socket.Recv()
+		if err != nil {
+			return nil,-1,fmt.Errorf("receiving: %w", err)
+		}
+		return r.Bytes(),0,nil
+	}
 }
 
 func (client *ZmqClient) Close() error {
@@ -84,7 +114,7 @@ func (c *ZmqClient) listen() {
 		default:
 			// Wait for message.
 			if msg, err := c.socket.Recv(); err == nil {
-				go func(msg * zmq4.Msg) {
+				go func(msg *zmq4.Msg) {
 					c.handler(msg)
 				}(&msg)
 			} else {

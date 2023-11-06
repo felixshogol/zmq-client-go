@@ -1,7 +1,6 @@
 package jsonencdec
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 	"testing"
@@ -273,7 +272,7 @@ func TestJsonDecodeStartResponse(t *testing.T) {
 		},
 	}
 
-	jsonMsg, err := json.Marshal(msg)
+	jsonMsg, err := jsonEncoder.Decode(msg)
 	if err != nil {
 		t.Fatalf("Decode failed:%s", err)
 		return
@@ -295,7 +294,7 @@ func TestJsonDecodeResponse(t *testing.T) {
 		},
 	}
 
-	jsonMsg, err := json.Marshal(msg)
+	jsonMsg, err := jsonEncoder.Decode(msg)
 	if err != nil {
 		t.Fatalf("Decode failed:%s", err)
 		return
@@ -318,7 +317,7 @@ func TestJsonDecodeTunnelResponse(t *testing.T) {
 		},
 	}
 
-	jsonMsg, err := json.Marshal(msg)
+	jsonMsg, err := jsonEncoder.Decode(msg)
 	if err != nil {
 		t.Fatalf("Decode failed:%s", err)
 		return
@@ -341,7 +340,7 @@ func TestJsonDecodeGetInfoResponse(t *testing.T) {
 		},
 	}
 
-	jsonMsg, err := json.Marshal(msg)
+	jsonMsg, err := jsonEncoder.Decode(msg)
 	if err != nil {
 		t.Fatalf("Decode failed:%s", err)
 		return
