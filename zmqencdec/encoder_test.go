@@ -1,4 +1,4 @@
-package encdec
+package zmqencdec
 
 import (
 	"encoding/hex"
@@ -10,7 +10,7 @@ import (
 	"gotest.tools/assert"
 )
 
-/////////////////////////////////////////////
+// ///////////////////////////////////////////
 // Encode tests
 func TestEncodeStartRequest(t *testing.T) {
 
@@ -32,14 +32,12 @@ func TestEncodeStartRequest(t *testing.T) {
 	l := unsafe.Sizeof(msg.StartRequest) + lengthSize
 	msg.Header.Length = uint16(l)
 
-	encoder := &Encoder{}
+	encoder := &ZmqEncoder{}
 
 	bytes, err := encoder.Encode(msg)
 	if err != nil {
 		t.Fatalf("Encode failed. Err:%v", err)
 	}
-	t.Logf("encoded bytes:%s", hex.EncodeToString(bytes))
-	t.Logf("Message:%v", msg)
 	assert.Equal(t, msg.Header.Length+uint16(cmdSize), uint16(len(bytes)), "\nThe two length should be the same.")
 	assert.Equal(t, expect, hex.EncodeToString(bytes), "\nThe two array should be the same.")
 }
@@ -63,14 +61,12 @@ func TestEncodeStopRequest(t *testing.T) {
 	l := unsafe.Sizeof(msg.StopRequest) + cmdSize
 	msg.Header.Length = uint16(l)
 
-	encoder := &Encoder{}
+	encoder := &ZmqEncoder{}
 
 	bytes, err := encoder.Encode(msg)
 	if err != nil {
 		t.Fatalf("Encode failed. Err:%v", err)
 	}
-	t.Logf("encoded bytes:%s", hex.EncodeToString(bytes))
-	t.Logf("Message:%v", msg)
 	assert.Equal(t, msg.Header.Length+uint16(lengthSize), uint16(len(bytes)), "\nThe two length should be the same.")
 	assert.Equal(t, expect, hex.EncodeToString(bytes), "\nThe two array should be the same.")
 }
@@ -118,14 +114,12 @@ func TestEncodeAddTunnelsRequest(t *testing.T) {
 	l := int(tunnelL)*tunnels + int(cmdSize) + 8 //flowid + tunnels
 	msg.Header.Length = uint16(l)
 
-	encoder := &Encoder{}
+	encoder := &ZmqEncoder{}
 
 	bytes, err := encoder.Encode(msg)
 	if err != nil {
 		t.Fatalf("Encode failed. Err:%v", err)
 	}
-	t.Logf("encoded bytes:%s", hex.EncodeToString(bytes))
-	t.Logf("Message:%v", msg)
 	assert.Equal(t, msg.Header.Length+uint16(lengthSize), uint16(len(bytes)), "\nThe two length should be the same.")
 	assert.Equal(t, expect, hex.EncodeToString(bytes), "\nThe two array should be the same.")
 }
@@ -138,7 +132,7 @@ func TestEncodeDelTunnelsRequest(t *testing.T) {
 		Header: MsgHeader{
 			Command: ZMQ_CMD_DEL_TUNNELS,
 		},
-		DelTeidRequest: MsgDelTEIDsRequest{
+		DelTunnelsRequest: MsgDelTunnelsRequest{
 			FlowId: 1233,
 			Teids: []uint32{
 				1001, 1002, 1003,
@@ -149,21 +143,19 @@ func TestEncodeDelTunnelsRequest(t *testing.T) {
 	cmdSize := reflect.TypeOf(msg.Header.Command).Size()
 	lengthSize := reflect.TypeOf(msg.Header.Length).Size()
 
-	teids := len(msg.DelTeidRequest.Teids)
+	teids := len(msg.DelTunnelsRequest.Teids)
 
 	var dummy *uint32
 	teidl := unsafe.Sizeof(*dummy)
 
 	l := int(teidl)*teids + int(cmdSize) + 8 // flowid, tieds
 	msg.Header.Length = uint16(l)
-	encoder := &Encoder{}
+	encoder := &ZmqEncoder{}
 
 	bytes, err := encoder.Encode(msg)
 	if err != nil {
 		t.Fatalf("Encode failed. Err:%v", err)
 	}
-	t.Logf("encoded bytes:%s", hex.EncodeToString(bytes))
-	t.Logf("Message:%v", msg)
 	assert.Equal(t, msg.Header.Length+uint16(lengthSize), uint16(len(bytes)), "\nThe two length should be the same.")
 	assert.Equal(t, expect, hex.EncodeToString(bytes), "\nThe two array should be the same.")
 }
@@ -176,7 +168,7 @@ func TestEncodeDelAllTunnelsRequest(t *testing.T) {
 		Header: MsgHeader{
 			Command: ZMQ_CMD_DEL_ALL_TUNNELS,
 		},
-		DelAllTeidRequest: MsgDelAllTEIDsRequest{
+		DelAllTunnelsRequest: MsgDelAllTunnelsRequest{
 			FlowId: 1233,
 		},
 	}
@@ -189,14 +181,12 @@ func TestEncodeDelAllTunnelsRequest(t *testing.T) {
 
 	l := int(flowIdSize) + int(cmdSize)
 	msg.Header.Length = uint16(l)
-	encoder := &Encoder{}
+	encoder := &ZmqEncoder{}
 
 	bytes, err := encoder.Encode(msg)
 	if err != nil {
 		t.Fatalf("Encode failed. Err:%v", err)
 	}
-	t.Logf("encoded bytes:%s", hex.EncodeToString(bytes))
-	t.Logf("Message:%v", msg)
 	assert.Equal(t, msg.Header.Length+uint16(lengthSize), uint16(len(bytes)), "\nThe two length should be the same.")
 	assert.Equal(t, expect, hex.EncodeToString(bytes), "\nThe two array should be the same.")
 }
@@ -222,19 +212,17 @@ func TestEncodeGetInfoRequest(t *testing.T) {
 
 	l := int(flowIdSize) + int(cmdSize)
 	msg.Header.Length = uint16(l)
-	encoder := &Encoder{}
+	encoder := &ZmqEncoder{}
 
 	bytes, err := encoder.Encode(msg)
 	if err != nil {
 		t.Fatalf("Encode failed. Err:%v", err)
 	}
-	t.Logf("encoded bytes:%s", hex.EncodeToString(bytes))
-	t.Logf("Message:%v", msg)
 	assert.Equal(t, msg.Header.Length+uint16(lengthSize), uint16(len(bytes)), "\nThe two length should be the same.")
 	assert.Equal(t, expect, hex.EncodeToString(bytes), "\nThe two array should be the same.")
 }
 
-/////////////////////////////////////////////
+// ///////////////////////////////////////////
 // Decode tests
 func TestDecodeStartResponse(t *testing.T) {
 	str := "00110001000004d16c6f63616c3a3539303031"
@@ -245,14 +233,14 @@ func TestDecodeStartResponse(t *testing.T) {
 		},
 		StartResponse: MsgStartResponse{
 			FlowId:    uint32(1233),
-			Publicher: "local:59001",
+			Publisher: "local:59001",
 		},
 	}
 
 	v := []byte("local:59001")
 	fmt.Printf("publisher %s\n", hex.EncodeToString(v))
 
-	encoder := &Encoder{}
+	encoder := &ZmqEncoder{}
 	bytes, _ := hex.DecodeString(str)
 	msg, err := encoder.Decode(bytes)
 	if err != nil {
@@ -278,7 +266,7 @@ func TestDecodeGetInfoResponse(t *testing.T) {
 	v := []byte("dfxp v1.1")
 	fmt.Printf("version %s\n", hex.EncodeToString(v))
 
-	encoder := &Encoder{}
+	encoder := &ZmqEncoder{}
 	bytes, _ := hex.DecodeString(str)
 	msg, err := encoder.Decode(bytes)
 	if err != nil {
@@ -300,7 +288,7 @@ func TestDecodeStopResponse(t *testing.T) {
 		},
 	}
 
-	encoder := &Encoder{}
+	encoder := &ZmqEncoder{}
 	bytes, _ := hex.DecodeString(str)
 	msg, err := encoder.Decode(bytes)
 	if err != nil {
@@ -323,7 +311,7 @@ func TestDecodeDeleteTunnelsResponse(t *testing.T) {
 		},
 	}
 
-	encoder := &Encoder{}
+	encoder := &ZmqEncoder{}
 	bytes, _ := hex.DecodeString(str)
 	msg, err := encoder.Decode(bytes)
 	if err != nil {
@@ -346,7 +334,7 @@ func TestDecodeDeleteAllTunnelsResponse(t *testing.T) {
 		},
 	}
 
-	encoder := &Encoder{}
+	encoder := &ZmqEncoder{}
 	bytes, _ := hex.DecodeString(str)
 	msg, err := encoder.Decode(bytes)
 	if err != nil {
@@ -369,7 +357,7 @@ func TestDecodeAddTunnelssResponse(t *testing.T) {
 		},
 	}
 
-	encoder := &Encoder{}
+	encoder := &ZmqEncoder{}
 	bytes, _ := hex.DecodeString(str)
 	msg, err := encoder.Decode(bytes)
 	if err != nil {
@@ -378,4 +366,3 @@ func TestDecodeAddTunnelssResponse(t *testing.T) {
 	assert.Equal(t, expect.Header, msg.Header, "\nThe two ZMQ message header should be the same.")
 	assert.Equal(t, expect.TunnelResponse, msg.TunnelResponse, "\nThe two ZMQ message header should be the same.")
 }
-

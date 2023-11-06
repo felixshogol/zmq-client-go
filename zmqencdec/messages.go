@@ -1,4 +1,4 @@
-package encdec
+package zmqencdec
 
 type ZmqMessageType uint16
 
@@ -26,7 +26,7 @@ type MsgStartRequest struct {
 
 type MsgStartResponse struct {
 	FlowId    uint32
-	Publicher string
+	Publisher string
 }
 
 type MsgResponse struct {
@@ -54,12 +54,12 @@ type MsgAddTunnelsRequest struct {
 	Tunnels []Tunnel
 }
 
-type MsgDelTEIDsRequest struct {
+type MsgDelTunnelsRequest struct {
 	FlowId uint32
 	Teids  []uint32
 }
 
-type MsgDelAllTEIDsRequest struct {
+type MsgDelAllTunnelsRequest struct {
 	FlowId uint32
 }
 
@@ -68,20 +68,20 @@ type MsgGetInfoRequest struct {
 }
 
 type MsgGetInfoResponse struct {
-	FlowId uint32
+	FlowId  uint32
 	Version string
 }
 
 type Message struct {
-	Header            MsgHeader
-	StartRequest      MsgStartRequest
-	StopRequest       MsgStopRequest
-	StartResponse     MsgStartResponse
-	Response          MsgResponse
-	AddTunnelRequest  MsgAddTunnelsRequest
-	DelTeidRequest    MsgDelTEIDsRequest
-	DelAllTeidRequest MsgDelAllTEIDsRequest
-	TunnelResponse    MsgTunnelResponse
-	GetInfoRequest    MsgGetInfoRequest
-	GetInfoResponse   MsgGetInfoResponse
+	Header               MsgHeader
+	StartRequest         MsgStartRequest
+	StopRequest          MsgStopRequest
+	StartResponse        MsgStartResponse
+	Response             MsgResponse
+	AddTunnelRequest     MsgAddTunnelsRequest
+	DelTunnelsRequest    MsgDelTunnelsRequest
+	DelAllTunnelsRequest MsgDelAllTunnelsRequest
+	TunnelResponse       MsgTunnelResponse
+	GetInfoRequest       MsgGetInfoRequest
+	GetInfoResponse      MsgGetInfoResponse
 }
