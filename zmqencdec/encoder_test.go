@@ -29,7 +29,7 @@ func TestEncodeStartRequest(t *testing.T) {
 	cmdSize := reflect.TypeOf(msg.Header.Command).Size()
 	lengthSize := reflect.TypeOf(msg.Header.Length).Size()
 
-	l := unsafe.Sizeof(msg.StartRequest) + lengthSize
+	l := unsafe.Sizeof(msg.StartRequest) + cmdSize
 	msg.Header.Length = uint16(l)
 
 	encoder := &ZmqEncoder{}
@@ -38,7 +38,7 @@ func TestEncodeStartRequest(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Encode failed. Err:%v", err)
 	}
-	assert.Equal(t, msg.Header.Length+uint16(cmdSize), uint16(len(bytes)), "\nThe two length should be the same.")
+	assert.Equal(t, msg.Header.Length+uint16(lengthSize), uint16(len(bytes)), "\nThe two length should be the same.")
 	assert.Equal(t, expect, hex.EncodeToString(bytes), "\nThe two array should be the same.")
 }
 

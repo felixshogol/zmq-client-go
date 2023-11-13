@@ -87,7 +87,7 @@ func TestJsonEncodeAddTunnelstRequest(t *testing.T) {
 	{
 		"Header":{
           "Length": 10,
-		  "Command": 1 
+		  "Command": 4 
 		},
 		"AddTunnelRequest": {
 			"FlowId":1234,
@@ -118,7 +118,7 @@ func TestJsonEncodeAddTunnelstRequest(t *testing.T) {
 	expMsg := &zmqencdec.Message{
 		Header: zmqencdec.MsgHeader{
 			Length:  uint16(10),
-			Command: zmqencdec.ZMQ_CMD_START,
+			Command: zmqencdec.ZMQ_CMD_ADD_TUNNELS,
 		},
 		AddTunnelRequest: zmqencdec.MsgAddTunnelsRequest{
 			FlowId: 1234,
