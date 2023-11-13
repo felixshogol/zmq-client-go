@@ -22,7 +22,7 @@ func init() {
 
 func main() {
 	glog.Infoln("Start dfxp Client")
-	option := zmqclient.ZmqClientOptions{}
+	option := zmqclient.ClientOptions{}
 	client := zmqclient.NewZmqClient(&option)
 	if client == nil {
 		glog.Fatalf("Create zmqClient failed.")

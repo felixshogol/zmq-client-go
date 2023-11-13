@@ -12,20 +12,21 @@ import (
 
 type ZmqPacketHandler func(msg *zmq4.Msg)
 
-type ZmqClientOptions struct {
+type ClientOptions struct {
 	Host string
 	Port int
+	To   int
 }
 
 type ZmqClient struct {
 	connected    bool
-	options      *ZmqClientOptions
+	options      *ClientOptions
 	socket       zmq.Socket
 	handler      ZmqPacketHandler
 	listenerExit chan bool
 }
 
-func NewZmqClient(options *ZmqClientOptions) *ZmqClient {
+func NewZmqClient(options *ClientOptions) *ZmqClient {
 	return &ZmqClient{
 		options: options,
 	}
@@ -42,12 +43,13 @@ func (c *ZmqClient) WithHandler(handler ZmqPacketHandler) error {
 	return nil
 }
 
-func (client *ZmqClient) Connect() error {
+func (client *ZmqClient) Connect(to int) error {
 	ctx := context.Background()
-	socket := zmq.NewReq(ctx, zmq.WithDialerRetry(time.Second))
+	socket := zmq.NewReq(ctx, zmq.WithDialerRetry(time.Second),zmq.WithDialerTimeout(time.Second*time.Duration(to)))
 
 	// todo after connect send info command to get dfxp version & information
 	glog.Infof("connecting perf zmq %s:%d", client.options.Host, client.options.Port)
+
 	if err := socket.Dial(fmt.Sprintf("tcp://%s:%d", client.options.Host, client.options.Port)); err != nil {
 		return err
 	}
@@ -61,34 +63,34 @@ func (client *ZmqClient) isConnected() bool {
 	return client.connected
 }
 
-//Send - send packet to server
+// Send - send packet to server
 func (client *ZmqClient) Send(packet []byte) error {
 	msg := zmq4.NewMsg(packet)
 	if err := client.socket.Send(msg); err != nil {
-		return fmt.Errorf("sending: %w", err)
+		return fmt.Errorf("send failed. Error: %v", err)
 	}
 	return nil
 }
 
-func (client *ZmqClient) SendAndReceiveWithTimeout(packet []byte, to int) ([]byte, int, error) {
+func (client *ZmqClient) SendAndReceiveWithTimeout(packet []byte, to int) ([]byte, error) {
 	if err := client.Send(packet); err != nil {
-		return nil, 0, err
+		return nil, err
 	}
 	return client.ReceiveWithTimeout(to)
 }
 
-
-func (client *ZmqClient) ReceiveWithTimeout(to int) ([]byte, int, error) {
+func (client *ZmqClient) ReceiveWithTimeout(to int) ([]byte, error) {
 	select {
 	case <-time.After(time.Duration(to) * time.Second):
-		return nil, -1, nil
+
+		return nil, fmt.Errorf("receive failed. Error timeout")
 	default:
 		// Wait for reply.
 		r, err := client.socket.Recv()
 		if err != nil {
-			return nil,-1,fmt.Errorf("receiving: %w", err)
+			return nil, fmt.Errorf("receive failed. Error: %v", err)
 		}
-		return r.Bytes(),0,nil
+		return r.Bytes(), nil
 	}
 }
 
