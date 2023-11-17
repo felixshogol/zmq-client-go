@@ -30,7 +30,7 @@ func (enc *ZmqEncoder) Encode(msg *Message) ([]byte, error) {
 	case ZMQ_CMD_DEL_TUNNELS:
 		return enc.encodeDelTunnelRequest(msg)
 	case ZMQ_CMD_DEL_ALL_TUNNELS:
-		return enc.encodeDelAllTEIDsRequest(msg)
+		return enc.encodeDelAllTunnelsRequest(msg)
 	case ZMQ_CMD_GET_INFO:
 		return enc.encodeGetInfoRequest(msg)
 
@@ -88,11 +88,12 @@ func (enc *ZmqEncoder) encodeDelTunnelRequest(msg *Message) ([]byte, error) {
 	return buffer.Bytes(), nil
 }
 
-func (enc *ZmqEncoder) encodeDelAllTEIDsRequest(msg *Message) ([]byte, error) {
+func (enc *ZmqEncoder) encodeDelAllTunnelsRequest(msg *Message) ([]byte, error) {
 	buffer := new(bytes.Buffer)
 	binary.Write(buffer, binary.BigEndian, msg.Header.Length)
 	binary.Write(buffer, binary.BigEndian, msg.Header.Command)
 	binary.Write(buffer, binary.BigEndian, msg.DelAllTunnelsRequest.FlowId)
+	binary.Write(buffer, binary.BigEndian, uint32(0))
 
 	return buffer.Bytes(), nil
 }

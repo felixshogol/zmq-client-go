@@ -63,15 +63,13 @@ func TestStartRequest(t *testing.T) {
 	}
 
 	t.Logf("Response:%s\n", hex.EncodeToString(response))
-
 	msg, err = encoder.Decode(response)
 
 	if err != nil {
 		t.Fatalf("Decode response failed. Err:%v", err)
 	}
 
-	t.Logf("Start response: cmd:%d length:%d", msg.Header.Command,msg.Header.Length)
-
+	t.Logf("Start response: cmd:%d length:%d", msg.Header.Command, msg.Header.Length)
 	t.Logf("Start response: flowid:%d publisher:%s", msg.StartResponse.FlowId, msg.StartResponse.Publisher)
 	expLength := len(msg.StartResponse.Publisher) + 4 + 2 // flowid + h.cmd
 
@@ -117,20 +115,17 @@ func TestStopRequest(t *testing.T) {
 	}
 
 	t.Logf("Response:%s\n", hex.EncodeToString(response))
-
 	msg, err = encoder.Decode(response)
-
 	if err != nil {
 		t.Fatalf("Decode response failed. Err:%v", err)
 	}
 
-	t.Logf("Start response: cmd:%d len:%d flowid:%d ", msg.Header.Command,msg.Header.Length,msg.Response.FlowId)
-	expLength :=  4 + 2 // flowid + h.cmd
+	t.Logf("Start response: cmd:%d len:%d flowid:%d ", msg.Header.Command, msg.Header.Length, msg.Response.FlowId)
+	expLength := 4 + 2 // flowid + + h.cmd
 
 	assert.Equal(t, uint16(expLength), msg.Header.Length, "\nThe two h.length should be the same.")
 	assert.Equal(t, uint32(1234), msg.Response.FlowId, "\nThe two FlowId should be the same.")
 }
-
 
 func TestAddTunnelsRequest(t *testing.T) {
 
@@ -167,30 +162,26 @@ func TestAddTunnelsRequest(t *testing.T) {
 	`
 
 	ip := int2ip(1234)
-	t.Logf("ip1 :%s",ip.String())
+	t.Logf("ip1 :%s", ip.String())
 	ip = int2ip(4321)
-	t.Logf("ip2 :%s",ip.String())
+	t.Logf("ip2 :%s", ip.String())
 
 	ip = int2ip(5678)
-	t.Logf("ip3 :%s",ip.String())
+	t.Logf("ip3 :%s", ip.String())
 	ip = int2ip(8765)
-	t.Logf("ip4 :%s",ip.String())
+	t.Logf("ip4 :%s", ip.String())
 
 	ip = int2ip(9012)
-	t.Logf("ip5 :%s",ip.String())
+	t.Logf("ip5 :%s", ip.String())
 	ip = int2ip(2109)
-	t.Logf("ip6 :%s",ip.String())
-
-
+	t.Logf("ip6 :%s", ip.String())
 
 	msg, err := jsonEncoder.Encode(jsonData)
 	if err != nil {
 		t.Fatalf("Json Encode failed. Err:%v", err)
 	}
-    
-	
+
 	cmdSize := reflect.TypeOf(msg.Header.Command).Size()
-	lengthSize := reflect.TypeOf(msg.Header.Length).Size()
 
 	tunnels := len(msg.AddTunnelRequest.Tunnels)
 	var dummy *zmqencdec.Tunnel
@@ -198,7 +189,6 @@ func TestAddTunnelsRequest(t *testing.T) {
 
 	l := int(tunnelL)*tunnels + int(cmdSize) + 8 //flowid + tunnels
 	msg.Header.Length = uint16(l)
-	
 
 	request, err := encoder.Encode(msg)
 	if err != nil {
@@ -221,6 +211,70 @@ func TestAddTunnelsRequest(t *testing.T) {
 	}
 
 	t.Logf("Response:%s\n", hex.EncodeToString(response))
+	msg, err = encoder.Decode(response)
+	if err != nil {
+		t.Fatalf("Decode response failed. Err:%v", err)
+	}
+	t.Logf("Start response: cmd:%d len:%d flowid:%d ", msg.Header.Command, msg.Header.Length, msg.TunnelResponse.FlowId)
+
+	expLength := 4 + 4 + 2 // flowid + tunnels number + h.cmd
+
+	assert.Equal(t, uint16(expLength), msg.Header.Length, "\nThe two h.length should be the same.")
+	assert.Equal(t, uint32(1234), msg.TunnelResponse.FlowId, "\nThe two FlowId should be the same.")
+}
+
+func TestDelTunnelsRequest(t *testing.T) {
+
+	jsonData := `
+	{
+		"Header":{
+          "Length": 10,
+		  "Command": 5 
+		},
+		"DelTunnelsRequest": {
+			"FlowId":1234,
+			"Teids" : [
+				1001,1002,1003
+			] 
+		}
+	}
+	`
+
+	msg, err := jsonEncoder.Encode(jsonData)
+	if err != nil {
+		t.Fatalf("Json Encode failed. Err:%v", err)
+	}
+
+	cmdSize := reflect.TypeOf(msg.Header.Command).Size()
+	lengthSize := reflect.TypeOf(msg.Header.Length).Size()
+
+	teids := len(msg.DelTunnelsRequest.Teids)
+	var dummy *uint32
+	teidl := unsafe.Sizeof(*dummy)
+
+	l := int(teidl)*teids + int(cmdSize) + 8 // flowid, tieds
+	msg.Header.Length = uint16(l)
+	request, err := encoder.Encode(msg)
+	if err != nil {
+		t.Fatalf("ZMQ Encode failed. Err:%v", err)
+	}
+
+	t.Logf("Delete Tunnels request:%s\n", hex.EncodeToString(request))
+
+	client := buildZmqClient(t)
+
+	t.Logf("Connect to server\n")
+	err = client.Connect(options.To)
+	if err != nil {
+		t.Fatalf("Connect failed. Err:%v", err)
+	}
+	t.Logf("SendAndReceiveWithTimeout\n")
+	response, err := client.SendAndReceiveWithTimeout(request, options.To)
+	if err != nil {
+		t.Fatalf("SendAndReceiveWithTimeout failed. Err:%v", err)
+	}
+
+	t.Logf("Response:%s\n", hex.EncodeToString(response))
 
 	msg, err = encoder.Decode(response)
 
@@ -228,14 +282,127 @@ func TestAddTunnelsRequest(t *testing.T) {
 		t.Fatalf("Decode response failed. Err:%v", err)
 	}
 
-	t.Logf("Start response: cmd:%d len:%d flowid:%d ", msg.Header.Command,msg.Header.Length,msg.TunnelResponse.FlowId)
+	t.Logf("Start response: cmd:%d len:%d flowid:%d ", msg.Header.Command, msg.Header.Length, msg.TunnelResponse.FlowId)
 
 	assert.Equal(t, uint16(lengthSize), msg.Header.Length, "\nThe two h.length should be the same.")
 	assert.Equal(t, uint32(1234), msg.TunnelResponse.FlowId, "\nThe two FlowId should be the same.")
 }
 
-func IntToIPv4(i int) {
-	panic("unimplemented")
+func TestDelAllTunnelsRequest(t *testing.T) {
+
+	jsonData := `
+	{
+		"Header":{
+          "Length": 10,
+		  "Command": 6 
+		},
+		"DelAllTunnelsRequest": {
+			"FlowId":1234
+		}
+	}
+	`
+
+	msg, err := jsonEncoder.Encode(jsonData)
+	if err != nil {
+		t.Fatalf("Json Encode failed. Err:%v", err)
+	}
+
+	cmdSize := reflect.TypeOf(msg.Header.Command).Size()
+	lengthSize := reflect.TypeOf(msg.Header.Length).Size()
+
+	teids := len(msg.DelTunnelsRequest.Teids)
+	var dummy *uint32
+	teidl := unsafe.Sizeof(*dummy)
+
+	l := int(teidl)*teids + int(cmdSize) + 8 // flowid, tieds
+	msg.Header.Length = uint16(l)
+
+	request, err := encoder.Encode(msg)
+	if err != nil {
+		t.Fatalf("ZMQ Encode failed. Err:%v", err)
+	}
+
+	t.Logf("Delete Tunnels request:%s\n", hex.EncodeToString(request))
+	client := buildZmqClient(t)
+	t.Logf("Connect to server\n")
+	err = client.Connect(options.To)
+	if err != nil {
+		t.Fatalf("Connect failed. Err:%v", err)
+	}
+	t.Logf("SendAndReceiveWithTimeout\n")
+	response, err := client.SendAndReceiveWithTimeout(request, options.To)
+	if err != nil {
+		t.Fatalf("SendAndReceiveWithTimeout failed. Err:%v", err)
+	}
+
+	t.Logf("Response:%s\n", hex.EncodeToString(response))
+
+	msg, err = encoder.Decode(response)
+
+	if err != nil {
+		t.Fatalf("Decode response failed. Err:%v", err)
+	}
+
+	t.Logf("Start response: cmd:%d len:%d flowid:%d ", msg.Header.Command, msg.Header.Length, msg.TunnelResponse.FlowId)
+
+	assert.Equal(t, uint16(lengthSize), msg.Header.Length, "\nThe two h.length should be the same.")
+	assert.Equal(t, uint32(1234), msg.TunnelResponse.FlowId, "\nThe two FlowId should be the same.")
+}
+
+func TestGetInfosRequest(t *testing.T) {
+
+	jsonData := `
+	{
+		"Header":{
+          "Length": 0,
+		  "Command": 7 
+		},
+		"GetInfoRequest": {
+			"FlowId":1234
+		}
+	}
+	`
+    expVersion := "1.0.0"
+	expLength := len(expVersion) + 4 +2 // flowId + h.cmd
+	msg, err := jsonEncoder.Encode(jsonData)
+	if err != nil {
+		t.Fatalf("Json Encode failed. Err:%v", err)
+	}
+
+	cmdSize := reflect.TypeOf(msg.Header.Command).Size()
+
+	l := int(cmdSize) + 4 // flowId
+	msg.Header.Length = uint16(l)
+
+	request, err := encoder.Encode(msg)
+	if err != nil {
+		t.Fatalf("ZMQ Encode failed. Err:%v", err)
+	}
+
+	t.Logf("get info request:%s\n", hex.EncodeToString(request))
+	client := buildZmqClient(t)
+	t.Logf("Connect to server\n")
+	err = client.Connect(options.To)
+	if err != nil {
+		t.Fatalf("Connect failed. Err:%v", err)
+	}
+	t.Logf("SendAndReceiveWithTimeout\n")
+	response, err := client.SendAndReceiveWithTimeout(request, options.To)
+	if err != nil {
+		t.Fatalf("SendAndReceiveWithTimeout failed. Err:%v", err)
+	}
+
+	t.Logf("Response:%s\n", hex.EncodeToString(response))
+	msg, err = encoder.Decode(response)
+	if err != nil {
+		t.Fatalf("Decode response failed. Err:%v", err)
+	}
+	t.Logf("Version:%s\n", msg.GetInfoResponse.Version)
+    
+	t.Logf("Start response: cmd:%d len:%d flowid:%d ", msg.Header.Command, msg.Header.Length, msg.GetInfoResponse.FlowId)
+	assert.Equal(t, uint16(expLength), msg.Header.Length, "\nThe two h.length should be the same.")
+	assert.Equal(t, uint32(1234), msg.GetInfoResponse.FlowId, "\nThe two FlowId should be the same.")
+	assert.Equal(t, expVersion, msg.GetInfoResponse.Version, "\nThe two Vesrion should be the same.")
 }
 
 
