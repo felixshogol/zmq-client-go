@@ -135,9 +135,9 @@ func (enc *ZmqEncoder) Decode(bytesArray []byte) (*Message, error) {
 	case ZMQ_CMD_GET_INFO:
 		return msg, enc.decodeGetInfoResponse(buffer, msg)
 	case ZMQ_CMD_ERROR:
-
+		return msg, enc.decodeErrorResponse(buffer, msg)
 	case ZMQ_CMD_MSG_ERROR:
-
+		return msg, enc.decodeMsgErrorResponse(buffer, msg)
 	default:
 		return nil, fmt.Errorf("Wrong message command [%d]", msg.Header.Command)
 	}
@@ -181,4 +181,22 @@ func (enc *ZmqEncoder) decodeGetInfoResponse(buffer *bytes.Buffer, msg *Message)
 	msg.GetInfoResponse.Version = string(bytes)
 	return nil
 
+}
+
+func (enc *ZmqEncoder) decodeErrorResponse(buffer *bytes.Buffer, msg *Message) error {
+	bytes := buffer.Bytes()
+	glog.Infof("bytes:%s", hex.EncodeToString(bytes))
+
+	//read Error
+	msg.MsgErrorResponse.Error = string(bytes)
+	return nil
+}
+
+func (enc *ZmqEncoder) decodeMsgErrorResponse(buffer *bytes.Buffer, msg *Message) error {
+	binary.Read(buffer, binary.BigEndian, &msg.MsgErrorResponse.FlowId)
+	//read Error
+	bytes := buffer.Bytes()
+	glog.Infof("bytes:%s", hex.EncodeToString(bytes))
+	msg.MsgErrorResponse.Error = string(bytes)
+	return nil
 }

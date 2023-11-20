@@ -70,6 +70,13 @@ func TestStartRequest(t *testing.T) {
 	}
 
 	t.Logf("Start response: cmd:%d length:%d", msg.Header.Command, msg.Header.Length)
+	if msg.Header.Command == zmqencdec.ZMQ_CMD_ERROR {
+		t.Fatalf("Received error:%s", msg.ErrorResponse.Error)
+	}
+	if msg.Header.Command == zmqencdec.ZMQ_CMD_MSG_ERROR {
+		t.Fatalf("Received message error. flowid:%d error:%s", msg.MsgErrorResponse.FlowId, msg.MsgErrorResponse.Error)
+	}
+
 	t.Logf("Start response: flowid:%d publisher:%s", msg.StartResponse.FlowId, msg.StartResponse.Publisher)
 	expLength := len(msg.StartResponse.Publisher) + 4 + 2 // flowid + h.cmd
 
@@ -120,15 +127,19 @@ func TestStopRequest(t *testing.T) {
 		t.Fatalf("Decode response failed. Err:%v", err)
 	}
 
-	t.Logf("Start response: cmd:%d len:%d flowid:%d ", msg.Header.Command, msg.Header.Length, msg.Response.FlowId)
+	t.Logf("Start response: cmd:%d len:%d", msg.Header.Command, msg.Header.Length)
+	if msg.Header.Command == zmqencdec.ZMQ_CMD_ERROR {
+		t.Fatalf("Received error:%s", msg.ErrorResponse.Error)
+	}
+	if msg.Header.Command == zmqencdec.ZMQ_CMD_MSG_ERROR {
+		t.Fatalf("Received message error. flowid:%d error:%s", msg.MsgErrorResponse.FlowId, msg.MsgErrorResponse.Error)
+	}
+
 	expLength := 4 + 2 // flowid + + h.cmd
 
 	assert.Equal(t, uint32(1234), msg.Response.FlowId, "\nThe two FlowId should be the same.")
-	if msg.Header.Command == zmqencdec.ZMQ_CMD_ERROR || msg.Header.Command == zmqencdec.ZMQ_CMD_MSG_ERROR {
-		t.Errorf("Received error:")
-
-	}
 	assert.Equal(t, uint16(expLength), msg.Header.Length, "\nThe two h.length should be the same.")
+
 }
 
 func TestAddTunnelsRequest(t *testing.T) {
@@ -238,7 +249,7 @@ func TestDelTunnelsRequest(t *testing.T) {
 		"DelTunnelsRequest": {
 			"FlowId":1234,
 			"Teids" : [
-				1001,1002,1003
+				1,2,3
 			] 
 		}
 	}
@@ -250,7 +261,7 @@ func TestDelTunnelsRequest(t *testing.T) {
 	}
 
 	cmdSize := reflect.TypeOf(msg.Header.Command).Size()
-	expLength := cmdSize + 4 + 4  // flowId ,tunnels
+	expLength := cmdSize + 4 + 4 // flowId ,tunnels
 
 	teids := len(msg.DelTunnelsRequest.Teids)
 	var dummy *uint32
@@ -286,8 +297,15 @@ func TestDelTunnelsRequest(t *testing.T) {
 		t.Fatalf("Decode response failed. Err:%v", err)
 	}
 
+	if msg.Header.Command == zmqencdec.ZMQ_CMD_ERROR {
+		t.Fatalf("Received error:%s", msg.ErrorResponse.Error)
+	}
+	t.Logf("Start response: cmd:%d len:%d", msg.Header.Command, msg.Header.Length)
+	if msg.Header.Command == zmqencdec.ZMQ_CMD_MSG_ERROR {
+		t.Fatalf("Received message error. flowid:%d error:%s", msg.MsgErrorResponse.FlowId, msg.MsgErrorResponse.Error)
+	}
+
 	t.Logf("Start response: cmd:%d len:%d flowid:%d ", msg.Header.Command, msg.Header.Length, msg.TunnelResponse.FlowId)
-	
 
 	assert.Equal(t, uint16(expLength), msg.Header.Length, "\nThe two h.length should be the same.")
 	assert.Equal(t, uint32(1234), msg.TunnelResponse.FlowId, "\nThe two FlowId should be the same.")
@@ -313,7 +331,7 @@ func TestDelAllTunnelsRequest(t *testing.T) {
 	}
 
 	cmdSize := reflect.TypeOf(msg.Header.Command).Size()
-	expLength := cmdSize + 4 + 4  // flowId ,tunnels
+	expLength := cmdSize + 4 + 4 // flowId ,tunnels
 
 	teids := len(msg.DelTunnelsRequest.Teids)
 	var dummy *uint32
@@ -341,14 +359,19 @@ func TestDelAllTunnelsRequest(t *testing.T) {
 	}
 
 	t.Logf("Response:%s\n", hex.EncodeToString(response))
-
 	msg, err = encoder.Decode(response)
 
 	if err != nil {
 		t.Fatalf("Decode response failed. Err:%v", err)
 	}
 
-	t.Logf("Start response: cmd:%d len:%d flowid:%d ", msg.Header.Command, msg.Header.Length, msg.TunnelResponse.FlowId)
+	if msg.Header.Command == zmqencdec.ZMQ_CMD_ERROR {
+		t.Fatalf("Received error:%s", msg.ErrorResponse.Error)
+	}
+	t.Logf("Start response: cmd:%d len:%d", msg.Header.Command, msg.Header.Length)
+	if msg.Header.Command == zmqencdec.ZMQ_CMD_MSG_ERROR {
+		t.Fatalf("Received message error. flowid:%d error:%s", msg.MsgErrorResponse.FlowId, msg.MsgErrorResponse.Error)
+	}
 
 	assert.Equal(t, uint16(expLength), msg.Header.Length, "\nThe two h.length should be the same.")
 	assert.Equal(t, uint32(1234), msg.TunnelResponse.FlowId, "\nThe two FlowId should be the same.")

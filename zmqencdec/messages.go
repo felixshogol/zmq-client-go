@@ -74,6 +74,15 @@ type MsgGetInfoResponse struct {
 	Version string
 }
 
+type ErrorResponse struct {
+	Error string
+}
+
+type MsgErrorResponse struct {
+	FlowId uint32
+	Error  string
+}
+
 type Message struct {
 	Header               MsgHeader
 	StartRequest         MsgStartRequest
@@ -86,4 +95,6 @@ type Message struct {
 	TunnelResponse       MsgTunnelResponse
 	GetInfoRequest       MsgGetInfoRequest
 	GetInfoResponse      MsgGetInfoResponse
+	ErrorResponse        ErrorResponse
+	MsgErrorResponse     MsgErrorResponse
 }
