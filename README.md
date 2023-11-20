@@ -1,4 +1,5 @@
-# zmq-client-go
+# dfxp
+Dflux Performance 
 
 ## ZMQ overview 
 messages list:
@@ -6,9 +7,12 @@ messages list:
     2.  stop request/response
     3.  get info request/response
     4.  tunnels add 
-    5.  tunnels delete    
-    6,  publish metrics
-
+    5.  tunnels delete
+    6.  get info     
+    7.  publish metrics
+    8. error response 
+    9. msg error response 
+    
 ## ZMQ messages format
 ### 1 Start message
     1. Request 
@@ -28,11 +32,10 @@ messages list:
         | ------ | ------ | ------ | ------ |
         |             flow id               |
         | ------ | ------ | ------ | ------ |
-        | char4  |  char3 |  char2 |  char1 | \
-        | ------ | ------ | ------ | ------ | |  publisher address 
-        | charN  |      .....               | | 
-        | ------ | ------ | ------ | ------ |/ 
-         
+        | char4  |  char3 |  char2 |  char1 | 
+        | ------ | ------ | ------ | ------ |
+        | charN  |      .....               |  
+        | ------ | ------ | ------ | ------ |
         
         where N - max publisher length
 
@@ -88,13 +91,13 @@ messages list:
         |             flow id               |
         | ------ | ------ | ------ | ------ |
         |             tunnels number        |
-        | ------ | ------ | ------ | ------ |\
-        |             tunnel1               | |
-        | ------ | ------ | ------ | ------ | |
-        |           ...........             | |  Tunnels
-        | ------ | ------ | ------ | ------ | |
-        |             tunnelN               | |
-        | ------ | ------ | ------ | ------ |/
+        | ------ | ------ | ------ | ------ |
+        |             tunnel1               |
+        | ------ | ------ | ------ | ------ |
+        |           ...........             |
+        | ------ | ------ | ------ | ------ |
+        |             tunnelN               |
+        | ------ | ------ | ------ | ------ |
 
 
         - Tunnel 
@@ -117,6 +120,8 @@ messages list:
         | ------ | ------ | ------ | ------ |
         |             flow id               |
         | ------ | ------ | ------ | ------ |
+        |             tunnels number        |
+        | ------ | ------ | ------ | ------ |
 
 ### 5. Remove tunnels message
 
@@ -128,33 +133,12 @@ messages list:
         |             flow id               |
         | ------ | ------ | ------ | ------ |
         |             teid number           |
-        | ------ | ------ | ------ | ------ |\
-        |             teid1                 | |
-        | ------ | ------ | ------ | ------ | |
-        |           ...........             | |  TEIDs
-        | ------ | ------ | ------ | ------ | |
-        |             teidN                 | |
-        | ------ | ------ | ------ | ------ |/ 
-
-
-
-    2. Response
-        |  byte4 |  byte3 |  byte2 |  byte1 | 
         | ------ | ------ | ------ | ------ |
-        | command         | length          |
+        |             teid1                 |
         | ------ | ------ | ------ | ------ |
-        |             flow id               |
+        |           ...........             |
         | ------ | ------ | ------ | ------ |
-
-
-### 6. Remove all tunnels message
-
-    1. Request 
-        |  byte4 |  byte3 |  byte2 |  byte1 | 
-        | ------ | ------ | ------ | ------ |
-        | command         | length          | 
-        | ------ | ------ | ------ | ------ | 
-        |             flow id               |
+        |             teidN                 |
         | ------ | ------ | ------ | ------ |
 
 
@@ -166,10 +150,11 @@ messages list:
         | ------ | ------ | ------ | ------ |
         |             flow id               |
         | ------ | ------ | ------ | ------ |
+        |             tunnels number        |
+        | ------ | ------ | ------ | ------ |
 
 
-
-### 7. Metrics message
+### 6. Metrics message
 
  1. Metric publish message
 
@@ -232,4 +217,26 @@ messages list:
             |                                   |
             | ------ | ------ | ------ | ------ | 
            
+### 7. error response messages
+    1. Error Response
+        |  byte4 |  byte3 |  byte2 |  byte1 | 
+        | ------ | ------ | ------ | ------ |
+        | command         | length          |
+        | ------ | ------ | ------ | ------ |\
+        | char4  |  char3 |  char2 |  char1 | |
+        | ------ | ------ | ------ | ------ | |  error
+        | charN  |      .....               | | 
+        | ------ | ------ | ------ | ------ |/
 
+
+    2. Message Error Response
+        |  byte4 |  byte3 |  byte2 |  byte1 | 
+        | ------ | ------ | ------ | ------ |
+        | command         | length          |
+        | ------ | ------ | ------ | ------ |
+        |             flow id               |
+        | ------ | ------ | ------ | ------ |\
+        | char4  |  char3 |  char2 |  char1 | |
+        | ------ | ------ | ------ | ------ | |  error
+        | charN  |      .....               | | 
+        | ------ | ------ | ------ | ------ |/

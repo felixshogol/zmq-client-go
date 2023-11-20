@@ -134,6 +134,9 @@ func (enc *ZmqEncoder) Decode(bytesArray []byte) (*Message, error) {
 		return msg, enc.decodeDelAllTEIDsResponse(buffer, msg)
 	case ZMQ_CMD_GET_INFO:
 		return msg, enc.decodeGetInfoResponse(buffer, msg)
+	case ZMQ_CMD_ERROR:
+
+	case ZMQ_CMD_MSG_ERROR:
 
 	default:
 		return nil, fmt.Errorf("Wrong message command [%d]", msg.Header.Command)

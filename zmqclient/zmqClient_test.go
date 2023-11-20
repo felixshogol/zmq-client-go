@@ -123,8 +123,12 @@ func TestStopRequest(t *testing.T) {
 	t.Logf("Start response: cmd:%d len:%d flowid:%d ", msg.Header.Command, msg.Header.Length, msg.Response.FlowId)
 	expLength := 4 + 2 // flowid + + h.cmd
 
-	assert.Equal(t, uint16(expLength), msg.Header.Length, "\nThe two h.length should be the same.")
 	assert.Equal(t, uint32(1234), msg.Response.FlowId, "\nThe two FlowId should be the same.")
+	if msg.Header.Command == zmqencdec.ZMQ_CMD_ERROR || msg.Header.Command == zmqencdec.ZMQ_CMD_MSG_ERROR {
+		t.Errorf("Received error:")
+
+	}
+	assert.Equal(t, uint16(expLength), msg.Header.Length, "\nThe two h.length should be the same.")
 }
 
 func TestAddTunnelsRequest(t *testing.T) {
@@ -246,7 +250,7 @@ func TestDelTunnelsRequest(t *testing.T) {
 	}
 
 	cmdSize := reflect.TypeOf(msg.Header.Command).Size()
-	lengthSize := reflect.TypeOf(msg.Header.Length).Size()
+	expLength := cmdSize + 4 + 4  // flowId ,tunnels
 
 	teids := len(msg.DelTunnelsRequest.Teids)
 	var dummy *uint32
@@ -283,8 +287,9 @@ func TestDelTunnelsRequest(t *testing.T) {
 	}
 
 	t.Logf("Start response: cmd:%d len:%d flowid:%d ", msg.Header.Command, msg.Header.Length, msg.TunnelResponse.FlowId)
+	
 
-	assert.Equal(t, uint16(lengthSize), msg.Header.Length, "\nThe two h.length should be the same.")
+	assert.Equal(t, uint16(expLength), msg.Header.Length, "\nThe two h.length should be the same.")
 	assert.Equal(t, uint32(1234), msg.TunnelResponse.FlowId, "\nThe two FlowId should be the same.")
 }
 
@@ -308,7 +313,7 @@ func TestDelAllTunnelsRequest(t *testing.T) {
 	}
 
 	cmdSize := reflect.TypeOf(msg.Header.Command).Size()
-	lengthSize := reflect.TypeOf(msg.Header.Length).Size()
+	expLength := cmdSize + 4 + 4  // flowId ,tunnels
 
 	teids := len(msg.DelTunnelsRequest.Teids)
 	var dummy *uint32
@@ -345,7 +350,7 @@ func TestDelAllTunnelsRequest(t *testing.T) {
 
 	t.Logf("Start response: cmd:%d len:%d flowid:%d ", msg.Header.Command, msg.Header.Length, msg.TunnelResponse.FlowId)
 
-	assert.Equal(t, uint16(lengthSize), msg.Header.Length, "\nThe two h.length should be the same.")
+	assert.Equal(t, uint16(expLength), msg.Header.Length, "\nThe two h.length should be the same.")
 	assert.Equal(t, uint32(1234), msg.TunnelResponse.FlowId, "\nThe two FlowId should be the same.")
 }
 
@@ -362,8 +367,8 @@ func TestGetInfosRequest(t *testing.T) {
 		}
 	}
 	`
-    expVersion := "1.0.0"
-	expLength := len(expVersion) + 4 +2 // flowId + h.cmd
+	expVersion := "1.0.0"
+	expLength := len(expVersion) + 4 + 2 // flowId + h.cmd
 	msg, err := jsonEncoder.Encode(jsonData)
 	if err != nil {
 		t.Fatalf("Json Encode failed. Err:%v", err)
@@ -398,13 +403,12 @@ func TestGetInfosRequest(t *testing.T) {
 		t.Fatalf("Decode response failed. Err:%v", err)
 	}
 	t.Logf("Version:%s\n", msg.GetInfoResponse.Version)
-    
+
 	t.Logf("Start response: cmd:%d len:%d flowid:%d ", msg.Header.Command, msg.Header.Length, msg.GetInfoResponse.FlowId)
 	assert.Equal(t, uint16(expLength), msg.Header.Length, "\nThe two h.length should be the same.")
 	assert.Equal(t, uint32(1234), msg.GetInfoResponse.FlowId, "\nThe two FlowId should be the same.")
 	assert.Equal(t, expVersion, msg.GetInfoResponse.Version, "\nThe two Vesrion should be the same.")
 }
-
 
 // ////////////////////////////////////////////////
 // Local functions
