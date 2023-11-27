@@ -50,10 +50,20 @@ type Tunnel struct {
 	UeIpV4  uint32
 	UpfIpV4 uint32
 }
+type JsonTunnel struct {
+	TeidIn  uint32
+	TeidOut uint32
+	UeIpV4  string
+	UpfIpV4 string
+}
 
 type MsgAddTunnelsRequest struct {
 	FlowId  uint32
 	Tunnels []Tunnel
+}
+type MsgAddJsonTunnelsRequest struct {
+	FlowId      uint32
+	JsonTunnels []JsonTunnel
 }
 
 type MsgDelTunnelsRequest struct {
@@ -90,6 +100,7 @@ type Message struct {
 	StartResponse        MsgStartResponse
 	Response             MsgResponse
 	AddTunnelRequest     MsgAddTunnelsRequest
+	AddJsonTunnelRequest MsgAddJsonTunnelsRequest
 	DelTunnelsRequest    MsgDelTunnelsRequest
 	DelAllTunnelsRequest MsgDelAllTunnelsRequest
 	TunnelResponse       MsgTunnelResponse

@@ -19,7 +19,7 @@ var encoder zmqencdec.ZmqEncoder
 var options ClientOptions
 
 const (
-	Host            = "192.168.1.227"
+	Host            = "192.168.1.173" //"192.168.1.227"
 	ServerPort      = 5555
 	PublisherPort   = 5557
 	MetricsInterval = 5
@@ -150,33 +150,33 @@ func TestAddTunnelsRequest(t *testing.T) {
           "Length": 10,
 		  "Command": 4 
 		},
-		"AddTunnelRequest": {
+		"AddJsonTunnelRequest": {
 			"FlowId":1234,
-			"Tunnels" : [
+			"JsonTunnels" : [
                {
 				"TeidIn":1,
 				"TeidOut":1001,
-				"UeIpV4":1234,
-				"UpfIpV4": 4321
+				"UeIpV4":"10.10.10.1",
+				"UpfIpV4": "12.12.12.1"
 			   },
 			   {
 				"TeidIn":2,
 				"TeidOut":1002,
-				"UeIpV4":5678,
-				"UpfIpV4": 8765
+				"UeIpV4":"10.10.10.2",
+				"UpfIpV4": "12.12.12.1"
 			   },
 			   {
 				"TeidIn":3,
 				"TeidOut":1003,
-				"UeIpV4":9012,
-				"UpfIpV4": 2109
+				"UeIpV4":"10.10.10.3",
+				"UpfIpV4": "12.12.12.1"
 			   }
 			] 
 		}
 	}
 	`
 
-	ip := int2ip(1234)
+	ip := int2ip(0xc0a801af)
 	t.Logf("ip1 :%s", ip.String())
 	ip = int2ip(4321)
 	t.Logf("ip2 :%s", ip.String())
@@ -198,12 +198,14 @@ func TestAddTunnelsRequest(t *testing.T) {
 
 	cmdSize := reflect.TypeOf(msg.Header.Command).Size()
 
-	tunnels := len(msg.AddTunnelRequest.Tunnels)
-	var dummy *zmqencdec.Tunnel
-	tunnelL := unsafe.Sizeof(*dummy)
+	tunnels := len(msg.AddJsonTunnelRequest.JsonTunnels)
 
+	tunnelL := calculateTunnelsLen(t, msg.AddJsonTunnelRequest.JsonTunnels)
+	t.Logf("tunnelL1:%d", tunnelL)
 	l := int(tunnelL)*tunnels + int(cmdSize) + 8 //flowid + tunnels
 	msg.Header.Length = uint16(l)
+
+	err = encodeJsonAddTunnelsMessage(t,msg)
 
 	request, err := encoder.Encode(msg)
 	if err != nil {
@@ -450,4 +452,42 @@ func int2ip(nn uint32) net.IP {
 	ip := make(net.IP, 4)
 	binary.BigEndian.PutUint32(ip, nn)
 	return ip
+}
+
+func calculateTunnelsLen(t *testing.T, tunnels []zmqencdec.JsonTunnel) int {
+	var l int
+	for _, tunnel := range tunnels {
+		l += len(tunnel.UeIpV4) + len(tunnel.UpfIpV4) + 4 + 4
+		t.Logf("l:%d", l)
+	}
+	return l
+}
+func encodeJsonAddTunnelsMessage(t *testing.T, msg *zmqencdec.Message) error {
+	jsonTunnels := msg.AddJsonTunnelRequest.JsonTunnels
+	var l int
+	elems := len(jsonTunnels)
+	msg.AddTunnelRequest.Tunnels = make([]zmqencdec.Tunnel,elems)
+	msg.AddTunnelRequest.FlowId = msg.AddJsonTunnelRequest.FlowId
+
+	for idx, jsontunnel := range jsonTunnels {
+		ueIpV4str := jsontunnel.UeIpV4
+		upfIpV4 := jsontunnel.UpfIpV4
+		ipAddress := net.ParseIP(ueIpV4str)
+		msg.AddTunnelRequest.Tunnels[idx].UeIpV4 = ip2int(ipAddress)
+		ipAddress = net.ParseIP(upfIpV4)
+		msg.AddTunnelRequest.Tunnels[idx].UpfIpV4 = ip2int(ipAddress)
+		msg.AddTunnelRequest.Tunnels[idx].TeidIn = msg.AddJsonTunnelRequest.JsonTunnels[idx].TeidIn
+		msg.AddTunnelRequest.Tunnels[idx].TeidOut = msg.AddJsonTunnelRequest.JsonTunnels[idx].TeidOut
+		t.Logf("UeIpV4:%x UpfIpV4:%x", msg.AddTunnelRequest.Tunnels[idx].UeIpV4,msg.AddTunnelRequest.Tunnels[idx].UpfIpV4)
+		l += len(jsontunnel.UeIpV4) + len(jsontunnel.UpfIpV4) + 4 + 4
+		t.Logf("l:%d", l)
+	}
+	return nil
+}
+
+func ip2int(ip net.IP) uint32 {
+	if len(ip) == 16 {
+		return binary.BigEndian.Uint32(ip[12:16])
+	}
+	return binary.BigEndian.Uint32(ip)
 }
