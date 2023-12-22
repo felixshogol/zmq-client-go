@@ -96,19 +96,19 @@ func TestJsonEncodeAddTunnelstRequest(t *testing.T) {
 				"TeidIn":1,
 				"TeidOut":1001,
 				"UeIpV4":1234,
-				"UpfIpV4": 4321
+				"SrvIpV4": 4321
 			   },
 			   {
 				"TeidIn":2,
 				"TeidOut":1002,
 				"UeIpV4":5678,
-				"UpfIpV4": 8765
+				"SrvIpV4": 8765
 			   },
 			   {
 				"TeidIn":3,
 				"TeidOut":1003,
 				"UeIpV4":9012,
-				"UpfIpV4": 2109
+				"SrvIpV4": 2109
 			   }
 			] 
 		}
@@ -127,19 +127,19 @@ func TestJsonEncodeAddTunnelstRequest(t *testing.T) {
 					TeidIn:  1,
 					TeidOut: 1001,
 					UeIpV4:  1234,
-					UpfIpV4: 4321,
+					SrvIpV4: 4321,
 				},
 				{
 					TeidIn:  2,
 					TeidOut: 1002,
 					UeIpV4:  5678,
-					UpfIpV4: 8765,
+					SrvIpV4: 8765,
 				},
 				{
 					TeidIn:  3,
 					TeidOut: 1003,
 					UeIpV4:  9012,
-					UpfIpV4: 2109,
+					SrvIpV4: 2109,
 				},
 			},
 		},

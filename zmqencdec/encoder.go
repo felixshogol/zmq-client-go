@@ -69,7 +69,7 @@ func (enc *ZmqEncoder) encodeAddTunnelRequest(msg *Message) ([]byte, error) {
 		binary.Write(buffer, binary.BigEndian, tunnel.TeidIn)
 		binary.Write(buffer, binary.BigEndian, tunnel.TeidOut)
 		binary.Write(buffer, binary.BigEndian, tunnel.UeIpV4)
-		binary.Write(buffer, binary.BigEndian, tunnel.UpfIpV4)
+		binary.Write(buffer, binary.BigEndian, tunnel.SrvIpV4)
 	}
 
 	return buffer.Bytes(), nil
@@ -93,7 +93,7 @@ func (enc *ZmqEncoder) encodeDelAllTunnelsRequest(msg *Message) ([]byte, error) 
 	binary.Write(buffer, binary.BigEndian, msg.Header.Length)
 	binary.Write(buffer, binary.BigEndian, msg.Header.Command)
 	binary.Write(buffer, binary.BigEndian, msg.DelAllTunnelsRequest.FlowId)
-	binary.Write(buffer, binary.BigEndian, uint32(0))
+	binary.Write(buffer, binary.BigEndian, uint32(0))// tunnels number
 
 	return buffer.Bytes(), nil
 }

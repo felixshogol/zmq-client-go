@@ -19,7 +19,8 @@ var encoder zmqencdec.ZmqEncoder
 var options ClientOptions
 
 const (
-	Host            = "192.168.1.173" //"192.168.1.227"
+	Host = "10.0.0.4" //"192.168.1.173"
+
 	ServerPort      = 5555
 	PublisherPort   = 5557
 	MetricsInterval = 5
@@ -157,19 +158,19 @@ func TestAddTunnelsRequest(t *testing.T) {
 				"TeidIn":1,
 				"TeidOut":1001,
 				"UeIpV4":"10.10.10.1",
-				"UpfIpV4": "12.12.12.1"
+				"SrvIpV4": "12.12.12.1"
 			   },
 			   {
 				"TeidIn":2,
 				"TeidOut":1002,
 				"UeIpV4":"10.10.10.2",
-				"UpfIpV4": "12.12.12.1"
+				"SrvIpV4": "12.12.12.1"
 			   },
 			   {
 				"TeidIn":3,
 				"TeidOut":1003,
 				"UeIpV4":"10.10.10.3",
-				"UpfIpV4": "12.12.12.1"
+				"SrvIpV4": "12.12.12.1"
 			   }
 			] 
 		}
@@ -205,7 +206,7 @@ func TestAddTunnelsRequest(t *testing.T) {
 	l := int(tunnelL)*tunnels + int(cmdSize) + 8 //flowid + tunnels
 	msg.Header.Length = uint16(l)
 
-	err = encodeJsonAddTunnelsMessage(t,msg)
+	err = encodeJsonAddTunnelsMessage(t, msg)
 
 	request, err := encoder.Encode(msg)
 	if err != nil {
@@ -251,7 +252,7 @@ func TestDelTunnelsRequest(t *testing.T) {
 		"DelTunnelsRequest": {
 			"FlowId":1234,
 			"Teids" : [
-				1,2,3
+				1
 			] 
 		}
 	}
@@ -457,7 +458,7 @@ func int2ip(nn uint32) net.IP {
 func calculateTunnelsLen(t *testing.T, tunnels []zmqencdec.JsonTunnel) int {
 	var l int
 	for _, tunnel := range tunnels {
-		l += len(tunnel.UeIpV4) + len(tunnel.UpfIpV4) + 4 + 4
+		l += len(tunnel.UeIpV4) + len(tunnel.SrvIpV4) + 4 + 4
 		t.Logf("l:%d", l)
 	}
 	return l
@@ -466,20 +467,20 @@ func encodeJsonAddTunnelsMessage(t *testing.T, msg *zmqencdec.Message) error {
 	jsonTunnels := msg.AddJsonTunnelRequest.JsonTunnels
 	var l int
 	elems := len(jsonTunnels)
-	msg.AddTunnelRequest.Tunnels = make([]zmqencdec.Tunnel,elems)
+	msg.AddTunnelRequest.Tunnels = make([]zmqencdec.Tunnel, elems)
 	msg.AddTunnelRequest.FlowId = msg.AddJsonTunnelRequest.FlowId
 
 	for idx, jsontunnel := range jsonTunnels {
 		ueIpV4str := jsontunnel.UeIpV4
-		upfIpV4 := jsontunnel.UpfIpV4
+		srvIpV4 := jsontunnel.SrvIpV4
 		ipAddress := net.ParseIP(ueIpV4str)
 		msg.AddTunnelRequest.Tunnels[idx].UeIpV4 = ip2int(ipAddress)
-		ipAddress = net.ParseIP(upfIpV4)
-		msg.AddTunnelRequest.Tunnels[idx].UpfIpV4 = ip2int(ipAddress)
+		ipAddress = net.ParseIP(srvIpV4)
+		msg.AddTunnelRequest.Tunnels[idx].SrvIpV4 = ip2int(ipAddress)
 		msg.AddTunnelRequest.Tunnels[idx].TeidIn = msg.AddJsonTunnelRequest.JsonTunnels[idx].TeidIn
 		msg.AddTunnelRequest.Tunnels[idx].TeidOut = msg.AddJsonTunnelRequest.JsonTunnels[idx].TeidOut
-		t.Logf("UeIpV4:%x UpfIpV4:%x", msg.AddTunnelRequest.Tunnels[idx].UeIpV4,msg.AddTunnelRequest.Tunnels[idx].UpfIpV4)
-		l += len(jsontunnel.UeIpV4) + len(jsontunnel.UpfIpV4) + 4 + 4
+		t.Logf("UeIpV4:%x SrvIpV4:%x", msg.AddTunnelRequest.Tunnels[idx].UeIpV4, msg.AddTunnelRequest.Tunnels[idx].SrvIpV4)
+		l += len(jsontunnel.UeIpV4) + len(jsontunnel.SrvIpV4) + 4 + 4
 		t.Logf("l:%d", l)
 	}
 	return nil

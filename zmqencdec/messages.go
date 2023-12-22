@@ -48,13 +48,13 @@ type Tunnel struct {
 	TeidIn  uint32
 	TeidOut uint32
 	UeIpV4  uint32
-	UpfIpV4 uint32
+	SrvIpV4 uint32
 }
 type JsonTunnel struct {
 	TeidIn  uint32
 	TeidOut uint32
 	UeIpV4  string
-	UpfIpV4 string
+	SrvIpV4 string
 }
 
 type MsgAddTunnelsRequest struct {
